@@ -1,17 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.22.2 
+
+Copyright (C) Michael Sheldon <mike@mikeasoft.com>
+
+This file is part of Abalone.
+
+Abalone is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Abalone is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Abalone.  If not, see <http://www.gnu.org/licenses/>.
+
+Author: Mike Sheldon <mike@mikeasoft.com>
+
+-->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <!-- interface-license-type gplv3 -->
+  <!-- interface-name Abalone -->
+  <!-- interface-description A speech recognition based input method for GNU/Linux desktops -->
+  <!-- interface-copyright Michael Sheldon <mike@mikeasoft.com> -->
+  <!-- interface-authors Mike Sheldon <mike@mikeasoft.com> -->
   <object class="GtkTextBuffer" id="sentence">
     <property name="text" translatable="yes">Sentence text will appear here</property>
   </object>
   <object class="GtkAssistant" id="trainer">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Abalone Trainer</property>
+    <property name="default_width">400</property>
+    <property name="default_height">200</property>
     <property name="icon_name">audio-input-microphone</property>
     <property name="use_header_bar">1</property>
+    <signal name="apply" handler="on_trainer_apply" swapped="no"/>
+    <signal name="cancel" handler="on_trainer_close" swapped="no"/>
+    <signal name="close" handler="on_trainer_close" swapped="no"/>
+    <signal name="prepare" handler="on_trainer_prepare" swapped="no"/>
     <child>
-      <object class="GtkGrid">
+      <object class="GtkGrid" id="welcome_page">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="row_spacing">20</property>
@@ -19,7 +51,8 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Abalone Trainer</property>
+            <property name="label" translatable="yes">Welcome</property>
+            <property name="justify">center</property>
             <attributes>
               <attribute name="weight" value="bold"/>
             </attributes>
@@ -37,6 +70,7 @@
 
 When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; button in the top right and the model download will start. This will involve downloading approximately 1GB of data.</property>
             <property name="use_markup">True</property>
+            <property name="justify">center</property>
             <property name="wrap">True</property>
           </object>
           <packing>
@@ -46,67 +80,28 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
         </child>
       </object>
       <packing>
+        <property name="page_type">intro</property>
+        <property name="title" translatable="yes">Welcome</property>
+        <property name="complete">True</property>
         <property name="has_padding">False</property>
       </packing>
     </child>
     <child>
-      <object class="GtkGrid">
+      <object class="GtkProgressBar" id="download_progress">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="row_spacing">10</property>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Speech Recognition Model Downloading...</property>
-            <attributes>
-              <attribute name="weight" value="bold"/>
-            </attributes>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkProgressBar">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="ellipsize">start</property>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">1</property>
-          </packing>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
+        <property name="margin_bottom">120</property>
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
+        <property name="text" translatable="yes">Downloading...</property>
+        <property name="show_text">True</property>
       </object>
       <packing>
-        <property name="has_padding">False</property>
+        <property name="title" translatable="yes">Download</property>
       </packing>
     </child>
     <child>
-      <object class="GtkGrid">
+      <object class="GtkGrid" id="tuning_page">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="row_spacing">10</property>
