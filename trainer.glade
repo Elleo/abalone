@@ -197,6 +197,17 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
                 <property name="image_position">right</property>
               </object>
               <packing>
+                <property name="left_attach">3</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="sentence_count">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">1/15</property>
+              </object>
+              <packing>
                 <property name="left_attach">2</property>
                 <property name="top_attach">0</property>
               </packing>
@@ -209,7 +220,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
         </child>
       </object>
       <packing>
-        <property name="has_padding">False</property>
+        <property name="title" translatable="yes">Fine Tuning</property>
       </packing>
     </child>
   </object>
