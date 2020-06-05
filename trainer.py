@@ -54,6 +54,7 @@ class Trainer:
         self.downloads -= 1
         if self.downloads == 0:
             self.progress_bar.set_text("Download complete")
+            self.window.set_page_complete(self.progress_bar, True)
 
     def on_trainer_close(self, *args):
         Gtk.main_quit()
@@ -66,12 +67,13 @@ class Trainer:
             if self.downloads == 0 and os.path.exists(self.model_file) and os.path.exists(self.scorer_file):
                 self.progress_bar.set_fraction(1)
                 self.progress_bar.set_text("Download complete")
+                self.window.set_page_complete(page, True)
             else:
                 if not os.path.exists(self.model_file) and not os.path.exists(self.model_file + ".part"):
                     model_downloader = Gio.File.new_for_uri(MODEL_URL)
                     model_downloader.copy_async(Gio.File.new_for_path(self.model_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("model",), self.download_complete, ("model",))
                     self.downloads += 1
-                if not os.path.exists(self.scorer_file) and not os.path.exists(self.scorer_file + ".part")
+                if not os.path.exists(self.scorer_file) and not os.path.exists(self.scorer_file + ".part"):
                     scorer_downloader = Gio.File.new_for_uri(SCORER_URL)
                     scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("scorer",), self.download_complete, ("scorer",))
                     self.downloads += 1

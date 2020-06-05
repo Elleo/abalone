@@ -98,6 +98,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </object>
       <packing>
         <property name="title" translatable="yes">Download</property>
+        <property name="has_padding">False</property>
       </packing>
     </child>
     <child>
@@ -221,6 +222,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </object>
       <packing>
         <property name="title" translatable="yes">Fine Tuning</property>
+        <property name="has_padding">False</property>
       </packing>
     </child>
   </object>
