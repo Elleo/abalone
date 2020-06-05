@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, GLib, Gio
 from xdg import BaseDirectory
-import os.path
+import os, os.path
 import threading
 
 
@@ -26,6 +26,13 @@ class Trainer:
 
         self.downloads = 0
 
+        # Clean up incomplete downloads
+        if os.path.exists(self.model_file + ".part"):
+            os.remove(self.model_file + ".part")
+
+        if os.path.exists(self.scorer_file + ".part"):
+            os.remove(self.scorer_file + ".part")
+
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
         self.window.show_all()
@@ -40,6 +47,10 @@ class Trainer:
         self.progress_bar.set_fraction((self.current_model_downloaded + self.current_scorer_downloaded) / (self.model_total_size + self.scorer_total_size))
 
     def download_complete(self, source_object, res, download_id):
+        if download_id == "model":
+            os.rename(self.model_file + ".part", self.model_file)
+        elif download_id == "scorer":
+            os.rename(self.scorer_file + ".part", self.scorer_file)
         self.downloads -= 1
         if self.downloads == 0:
             self.progress_bar.set_text("Download complete")
@@ -56,11 +67,14 @@ class Trainer:
                 self.progress_bar.set_fraction(1)
                 self.progress_bar.set_text("Download complete")
             else:
-                model_downloader = Gio.File.new_for_uri(MODEL_URL)
-                scorer_downloader = Gio.File.new_for_uri(SCORER_URL)
-                model_downloader.copy_async(Gio.File.new_for_path(self.model_file), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("model",), self.download_complete, ("model",))
-                scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("scorer",), self.download_complete, ("scorer",))
-                self.downloads += 2
+                if not os.path.exists(self.model_file) and not os.path.exists(self.model_file + ".part"):
+                    model_downloader = Gio.File.new_for_uri(MODEL_URL)
+                    model_downloader.copy_async(Gio.File.new_for_path(self.model_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("model",), self.download_complete, ("model",))
+                    self.downloads += 1
+                if not os.path.exists(self.scorer_file) and not os.path.exists(self.scorer_file + ".part")
+                    scorer_downloader = Gio.File.new_for_uri(SCORER_URL)
+                    scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("scorer",), self.download_complete, ("scorer",))
+                    self.downloads += 1
 
 
 if __name__ == "__main__":
