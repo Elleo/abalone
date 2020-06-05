@@ -5,10 +5,12 @@ from gi.repository import Gtk, GObject, GLib, Gio
 from xdg import BaseDirectory
 import os, os.path
 import threading
-
+import random
+import glob
 
 MODEL_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.pbmm"
 SCORER_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.scorer"
+
 
 class Trainer:
 
@@ -35,6 +37,9 @@ class Trainer:
 
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
+        self.tuning_page = self.builder.get_object("tuning_page")
+        self.sentence_buffer = self.builder.get_object("sentence")
+        self.sentences = self.load_sentences()
         self.window.show_all()
 
     def download_progress(self, current_num_bytes, total_num_bytes, download_id):
@@ -55,6 +60,20 @@ class Trainer:
         if self.downloads == 0:
             self.progress_bar.set_text("Download complete")
             self.window.set_page_complete(self.progress_bar, True)
+
+    def load_sentences(self):
+        sentences = []
+        for sentence_file in glob.glob("training-text/*.txt"):
+            f = open(sentence_file, 'r')
+            sentences += f.readlines()
+            f.close()
+        return sentences
+
+    def update_training_sentence(self):
+        self.sentence_buffer.set_text(random.choice(self.sentences))
+
+    def on_next_sentence_button_clicked(self, *args):
+        self.update_training_sentence()
 
     def on_trainer_close(self, *args):
         Gtk.main_quit()
@@ -77,6 +96,9 @@ class Trainer:
                     scorer_downloader = Gio.File.new_for_uri(SCORER_URL)
                     scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("scorer",), self.download_complete, ("scorer",))
                     self.downloads += 1
+        if page == self.tuning_page:
+            self.update_training_sentence()
+
 
 
 if __name__ == "__main__":
