@@ -1,0 +1,27 @@
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<!-- filename: abalone.xml -->
+<component>
+	<name>org.freedesktop.IBus.Abalone</name>
+	<description>Abalone Speech Recognition Component</description>
+	<exec>${libexecdir}/ibus-engine-abalone --ibus</exec>
+	<version>@VERSION@</version>
+	<author>Mike Sheldon &lt;elleo@gnu.org&gt;</author>
+	<license>GPL</license>
+	<homepage>https://github.com/Elleo/abalone</homepage>
+	<textdomain>abalone</textdomain>
+
+	<engines>
+		<engine>
+			<name>abalone</name>
+			<language>en</language>
+			<license>GPL</license>
+			<author>Mike Sheldon &lt;elleo@gnu.org&gt;</author>
+			<icon>${pkgdatadir}/icons/abalone.svg</icon>
+			<layout>us</layout>
+			<longname>Abalone</longname>
+			<description>Speech Recognition Input Method</description>
+			<rank>0</rank>
+		</engine>
+	</engines>
+
+</component>

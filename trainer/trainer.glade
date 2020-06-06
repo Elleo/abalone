@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.22.2 
 
-Copyright (C) Michael Sheldon <mike@mikeasoft.com>
+Copyright (C) Mike Sheldon <elleo@gnu.org>
 
 This file is part of Abalone.
 
@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Abalone.  If not, see <http://www.gnu.org/licenses/>.
 
-Author: Mike Sheldon <mike@mikeasoft.com>
+Author: Mike Sheldon <elleo@gnu.org>
 
 -->
 <interface>
