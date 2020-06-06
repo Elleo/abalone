@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject, GLib, Gio
+gi.require_version("Gst", "1.0")
+from gi.repository import Gtk, GObject, GLib, Gio, Gst
 from xdg import BaseDirectory
 import os, os.path
 import threading
@@ -21,12 +22,17 @@ class Trainer:
         self.data_dir = BaseDirectory.save_data_path("abalone")
         self.model_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.pbmm")
         self.scorer_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.scorer")
+        self.training_dir = os.path.join(self.data_dir, "training-data")
+        if not os.path.exists(self.training_dir):
+            os.mkdir(self.training_dir)
         self.model_total_size = 0
         self.scorer_total_size = 0
         self.current_model_downloaded = 0
         self.current_scorer_downloaded = 0
 
         self.downloads = 0
+
+        self.have_sample = False
 
         # Clean up incomplete downloads
         if os.path.exists(self.model_file + ".part"):
@@ -38,6 +44,7 @@ class Trainer:
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
         self.tuning_page = self.builder.get_object("tuning_page")
+        self.play_button = self.builder.get_object("play_button")
         self.sentence_buffer = self.builder.get_object("sentence")
         self.sentences = self.load_sentences()
         self.window.show_all()
@@ -70,7 +77,15 @@ class Trainer:
         return sentences
 
     def update_training_sentence(self):
+        self.have_sample = False
+        self.play_button.set_sensitive(False)
         self.sentence_buffer.set_text(random.choice(self.sentences))
+
+    def on_record_button_toggled(self, button):
+        pass
+
+    def on_play_button_toggled(self, button):
+        pass
 
     def on_next_sentence_button_clicked(self, *args):
         self.update_training_sentence()
