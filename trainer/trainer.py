@@ -27,10 +27,11 @@ import os, os.path
 import threading
 import random
 import glob
+import sys
 
 MODEL_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.pbmm"
 SCORER_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.scorer"
-
+MIN_SAMPLES_REQUIRED = 30
 
 class Trainer:
 
@@ -42,8 +43,17 @@ class Trainer:
         self.model_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.pbmm")
         self.scorer_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.scorer")
         self.training_dir = os.path.join(self.data_dir, "training-data")
+        
+        self.sample_id = 0
         if not os.path.exists(self.training_dir):
             os.mkdir(self.training_dir)
+        else:
+            for wav_file in glob.glob(os.path.join(self.training_dir, "*.wav")):
+                wav_id = int(wav_file[:-4].split("/")[-1])
+                print(wav_id)
+                if wav_id >= self.sample_id:
+                    self.sample_id = wav_id + 1
+
         self.model_total_size = 0
         self.scorer_total_size = 0
         self.current_model_downloaded = 0
@@ -59,6 +69,9 @@ class Trainer:
 
         if os.path.exists(self.scorer_file + ".part"):
             os.remove(self.scorer_file + ".part")
+
+        self.init_recording()
+        self.init_playback()
 
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
@@ -87,6 +100,10 @@ class Trainer:
             self.progress_bar.set_text("Download complete")
             self.window.set_page_complete(self.progress_bar, True)
 
+    def update_sentence_count(self):
+        sentence_count = self.builder.get_object("sentence_count")
+        sentence_count.set_text("%d/%d" % (self.sample_id, MIN_SAMPLES_REQUIRED))
+
     def load_sentences(self):
         sentences = []
         for sentence_file in glob.glob("training-text/*.txt"):
@@ -96,17 +113,53 @@ class Trainer:
         return sentences
 
     def update_training_sentence(self):
+        if self.have_sample:
+            self.sample_id += 1
         self.have_sample = False
         self.play_button.set_sensitive(False)
         self.sentence_buffer.set_text(random.choice(self.sentences))
+        self.update_sentence_count()
+
+    def init_recording(self):
+        self.record_pipeline = Gst.parse_launch("autoaudiosrc ! audioconvert ! audiorate ! audioresample ! audio/x-raw,format=S16LE,rate=16000,channels=1 ! wavenc ! filesink name=wavrecfile")
+        self.wavrecfile = self.record_pipeline.get_by_name("wavrecfile")
+
+    def init_playback(self):
+        self.play_pipeline = Gst.parse_launch("filesrc name=wavplayfile ! decodebin ! audioconvert ! autoaudiosink")
+        self.wavplayfile = self.play_pipeline.get_by_name("wavplayfile")
+
+    def reset_recording(self):
+        self.record_pipeline.set_state(Gst.State.NULL)
+        self.init_recording()
+
+    def reset_playback(self):
+        self.play_pipeline.set_state(Gst.State.NULL)
+        self.init_playback()
 
     def on_record_button_toggled(self, button):
-        pass
+        if button.get_active():
+            self.reset_playback()
+            f = open(os.path.join(self.training_dir, "%d.txt" % self.sample_id), 'w')
+            f.write(self.sentence_text)
+            f.close()
+            self.wavrecfile.set_property("location", os.path.join(self.training_dir, "%d.wav" % self.sample_id))
+            self.record_pipeline.set_state(Gst.State.PLAYING)
+            self.play_button.set_sensitive(True)
+            self.have_sample = True
+        else:
+            self.reset_recording()
 
     def on_play_button_toggled(self, button):
-        pass
+        if button.get_active():
+            self.reset_recording()
+            self.wavplayfile.set_property("location", os.path.join(self.training_dir, "%d.wav" % self.sample_id))
+            self.play_pipeline.set_state(Gst.State.PLAYING)
+        else:
+            self.reset_playback()
 
     def on_next_sentence_button_clicked(self, *args):
+        self.play_pipeline.set_state(Gst.State.READY)
+        self.record_pipeline.set_state(Gst.State.READY)
         self.update_training_sentence()
 
     def on_trainer_close(self, *args):
@@ -133,8 +186,14 @@ class Trainer:
         if page == self.tuning_page:
             self.update_training_sentence()
 
+    @property
+    def sentence_text(self):
+        startIter, endIter = self.sentence_buffer.get_bounds()    
+        return self.sentence_buffer.get_text(startIter, endIter, False) 
+
 
 
 if __name__ == "__main__":
+    Gst.init(sys.argv)
     trainer = Trainer()	
     Gtk.main()

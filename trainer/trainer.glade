@@ -201,7 +201,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
               </packing>
             </child>
             <child>
-              <object class="GtkToggleButton" id="player_button">
+              <object class="GtkToggleButton" id="play_button">
                 <property name="label">gtk-media-play</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -210,6 +210,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
                 <property name="use_stock">True</property>
                 <property name="image_position">top</property>
                 <property name="always_show_image">True</property>
+                <signal name="toggled" handler="on_play_button_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">1</property>
