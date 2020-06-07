@@ -23,16 +23,16 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gst", "1.0")
 from gi.repository import Gtk, GObject, GLib, Gio, Gst
 from xdg import BaseDirectory
-from jiwer import wer
 import os, os.path
 import threading
 import random
+import jiwer
 import glob
 import sys
 
 MODEL_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.pbmm"
 SCORER_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.scorer"
-MIN_SAMPLES_REQUIRED = 30
+MIN_SAMPLES_REQUIRED = 10
 
 class Trainer:
 
@@ -74,7 +74,8 @@ class Trainer:
         self.init_playback()
 
         self.window = self.builder.get_object("trainer")
-        self.progress_bar = self.builder.get_object("download_progress")
+        self.download_progress = self.builder.get_object("download_progress")
+        self.training_progress = self.builder.get_object("training_progress")
         self.tuning_page = self.builder.get_object("tuning_page")
         self.training_page = self.builder.get_object("training_page")
         self.record_button = self.builder.get_object("record_button")
@@ -97,7 +98,7 @@ class Trainer:
         elif download_id == "scorer":
             self.scorer_total_size = total_num_bytes
             self.current_scorer_downloaded = current_num_bytes
-        self.progress_bar.set_fraction((self.current_model_downloaded + self.current_scorer_downloaded) / (self.model_total_size + self.scorer_total_size))
+        self.download_progress.set_fraction((self.current_model_downloaded + self.current_scorer_downloaded) / (self.model_total_size + self.scorer_total_size))
 
     def download_complete(self, source_object, res, download_id):
         if download_id == "model":
@@ -106,8 +107,8 @@ class Trainer:
             os.rename(self.scorer_file + ".part", self.scorer_file)
         self.downloads -= 1
         if self.downloads == 0:
-            self.progress_bar.set_text("Download complete")
-            self.window.set_page_complete(self.progress_bar, True)
+            self.download_progress.set_text("Download complete")
+            self.window.set_page_complete(self.download_progress, True)
 
     def update_sentence_count(self):
         sentence_count = self.builder.get_object("sentence_count")
@@ -173,13 +174,15 @@ class Trainer:
         structure = message.get_structure()
         if structure and structure.get_name() == "deepspeech":
             self.recognised_text += structure.get_value("text") + "\n"
+            self.training_progress.set_fraction((self.testing_sample + 1) / self.sample_id)
             if self.testing_sample < self.sample_id - 1:
                 self.test_pipeline.set_state(Gst.State.NULL)
                 self.test_sample(self.testing_sample + 1)
             else:
+                self.test_text = jiwer.RemovePunctuation()(self.test_text).lower().encode("ascii", "ignore")
                 print("Expected:", self.test_text)
                 print("Got:", self.recognised_text)
-                accuracy = 100 - wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
+                accuracy = 100 - jiwer.wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
                 if self.pretraining:
                     pretraining_accuracy_label = self.builder.get_object("pretraining_accuracy_label")
                     pretraining_accuracy_label.set_text("%.2f%%" % accuracy)
@@ -187,6 +190,7 @@ class Trainer:
                     self.training = True
                     status_label = self.builder.get_object("status_label")
                     status_label.set_text("Training...")
+                    self.training_progress.set_fraction(0)
                 if self.posttraining:
                     posttraining_accuracy_label = self.builder.get_object("posttraining_accuracy_label")
                     posttraining_accuracy_label.set_text("%.2f%%" % accuracy)
@@ -227,10 +231,10 @@ class Trainer:
         print(args)
 
     def on_trainer_prepare(self, assistant, page):
-        if page == self.progress_bar:
+        if page == self.download_progress:
             if self.downloads == 0 and os.path.exists(self.model_file) and os.path.exists(self.scorer_file):
-                self.progress_bar.set_fraction(1)
-                self.progress_bar.set_text("Download complete")
+                self.download_progress.set_fraction(1)
+                self.download_progress.set_text("Download complete")
                 self.window.set_page_complete(page, True)
             else:
                 if not os.path.exists(self.model_file) and not os.path.exists(self.model_file + ".part"):
