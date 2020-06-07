@@ -50,7 +50,6 @@ class Trainer:
         else:
             for wav_file in glob.glob(os.path.join(self.training_dir, "*.wav")):
                 wav_id = int(wav_file[:-4].split("/")[-1])
-                print(wav_id)
                 if wav_id >= self.sample_id:
                     self.sample_id = wav_id + 1
 
@@ -76,6 +75,7 @@ class Trainer:
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
         self.tuning_page = self.builder.get_object("tuning_page")
+        self.record_button = self.builder.get_object("record_button")
         self.play_button = self.builder.get_object("play_button")
         self.sentence_buffer = self.builder.get_object("sentence")
         self.sentences = self.load_sentences()
@@ -127,14 +127,23 @@ class Trainer:
     def init_playback(self):
         self.play_pipeline = Gst.parse_launch("filesrc name=wavplayfile ! decodebin ! audioconvert ! autoaudiosink")
         self.wavplayfile = self.play_pipeline.get_by_name("wavplayfile")
+        bus = self.play_pipeline.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message", self.on_playback_message)
 
     def reset_recording(self):
+        self.record_button.set_active(False)
         self.record_pipeline.set_state(Gst.State.NULL)
         self.init_recording()
 
     def reset_playback(self):
+        self.play_button.set_active(False)
         self.play_pipeline.set_state(Gst.State.NULL)
         self.init_playback()
+
+    def on_playback_message(self, bus, message):
+        if message.type == Gst.MessageType.EOS:
+            self.reset_playback()
 
     def on_record_button_toggled(self, button):
         if button.get_active():
