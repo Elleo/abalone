@@ -83,7 +83,6 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
         <property name="page_type">intro</property>
         <property name="title" translatable="yes">Welcome</property>
         <property name="complete">True</property>
-        <property name="has_padding">False</property>
       </packing>
     </child>
     <child>
@@ -98,7 +97,6 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </object>
       <packing>
         <property name="title" translatable="yes">Download</property>
-        <property name="has_padding">False</property>
       </packing>
     </child>
     <child>
@@ -126,6 +124,7 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">When you're ready to begin fine tuning your model press the &lt;i&gt;&lt;b&gt;Record&lt;/b&gt;&lt;/i&gt; button at the bottom of the window. To hear your recording back press the &lt;i&gt;&lt;b&gt;Play&lt;/b&gt;&lt;/i&gt; button. If you're unhappy with your recording press &lt;i&gt;&lt;b&gt;Record&lt;/b&gt;&lt;/i&gt; to re-record your sentence. When you are satisfied with your recording press the &lt;i&gt;&lt;b&gt;Next Sentence&lt;/b&gt;&lt;/i&gt; button.</property>
             <property name="use_markup">True</property>
+            <property name="justify">center</property>
             <property name="wrap">True</property>
           </object>
           <packing>
@@ -226,7 +225,6 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </object>
       <packing>
         <property name="title" translatable="yes">Fine Tuning</property>
-        <property name="has_padding">False</property>
       </packing>
     </child>
     <child>
@@ -356,7 +354,6 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </object>
       <packing>
         <property name="title" translatable="yes">Retraining</property>
-        <property name="has_padding">False</property>
       </packing>
     </child>
   </object>

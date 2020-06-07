@@ -179,10 +179,10 @@ class Trainer:
                 self.test_pipeline.set_state(Gst.State.NULL)
                 self.test_sample(self.testing_sample + 1)
             else:
-                self.test_text = jiwer.RemovePunctuation()(self.test_text).lower().encode("ascii", "ignore")
+                self.test_text = jiwer.RemovePunctuation()(self.test_text).lower().encode("ascii", "ignore").decode()
                 print("Expected:", self.test_text)
                 print("Got:", self.recognised_text)
-                accuracy = 100 - jiwer.wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
+                accuracy = 100 - jiwer.wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ").replace("'", "")) * 100
                 if self.pretraining:
                     pretraining_accuracy_label = self.builder.get_object("pretraining_accuracy_label")
                     pretraining_accuracy_label.set_text("%.2f%%" % accuracy)
