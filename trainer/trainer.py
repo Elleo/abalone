@@ -23,6 +23,7 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gst", "1.0")
 from gi.repository import Gtk, GObject, GLib, Gio, Gst
 from xdg import BaseDirectory
+from jiwer import wer
 import os, os.path
 import threading
 import random
@@ -81,6 +82,11 @@ class Trainer:
         self.sentences = self.load_sentences()
         self.window.show_all()
 
+        self.test_text = ""
+        self.recognised_text = ""
+
+        self.test_sample(0)
+
     def download_progress(self, current_num_bytes, total_num_bytes, download_id):
         if download_id == "model":
             self.model_total_size = total_num_bytes
@@ -131,6 +137,19 @@ class Trainer:
         bus.add_signal_watch()
         bus.connect("message", self.on_playback_message)
 
+    def test_sample(self, sample_to_test):
+        self.testing_sample = sample_to_test
+        self.test_pipeline = Gst.parse_launch("filesrc name=wavtestfile ! decodebin ! audioconvert ! audiorate ! audioresample ! deepspeech silence-threshold=1 silence-length=20 ! fakesink")
+        f = open(os.path.join(self.training_dir, "%d.txt" % sample_to_test), 'r')
+        self.test_text += f.read()
+        f.close()
+        self.wavtestfile = self.test_pipeline.get_by_name("wavtestfile")
+        self.wavtestfile.set_property("location", os.path.join(self.training_dir, "%d.wav" % sample_to_test))
+        bus = self.test_pipeline.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message", self.on_test_message)
+        self.test_pipeline.set_state(Gst.State.PLAYING)
+
     def reset_recording(self):
         self.record_button.set_active(False)
         self.record_pipeline.set_state(Gst.State.NULL)
@@ -144,6 +163,19 @@ class Trainer:
     def on_playback_message(self, bus, message):
         if message.type == Gst.MessageType.EOS:
             self.reset_playback()
+
+    def on_test_message(self, bus, message):
+        structure = message.get_structure()
+        if structure and structure.get_name() == "deepspeech":
+            self.recognised_text += structure.get_value("text") + "\n"
+            if self.testing_sample < self.sample_id - 1:
+                self.test_pipeline.set_state(Gst.State.NULL)
+                self.test_sample(self.testing_sample + 1)
+            else:
+                print("Expected:", self.test_text)
+                print("Got:", self.recognised_text)
+                self.accuracy = 100 - wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
+                print("Accuracy: %.2f%%" % self.accuracy)
 
     def on_record_button_toggled(self, button):
         if button.get_active():
