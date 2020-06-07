@@ -76,6 +76,7 @@ class Trainer:
         self.window = self.builder.get_object("trainer")
         self.progress_bar = self.builder.get_object("download_progress")
         self.tuning_page = self.builder.get_object("tuning_page")
+        self.training_page = self.builder.get_object("training_page")
         self.record_button = self.builder.get_object("record_button")
         self.play_button = self.builder.get_object("play_button")
         self.sentence_buffer = self.builder.get_object("sentence")
@@ -85,7 +86,9 @@ class Trainer:
         self.test_text = ""
         self.recognised_text = ""
 
-        self.test_sample(0)
+        self.pretraining = False
+        self.training = False
+        self.posttraining = False
 
     def download_progress(self, current_num_bytes, total_num_bytes, download_id):
         if download_id == "model":
@@ -109,6 +112,8 @@ class Trainer:
     def update_sentence_count(self):
         sentence_count = self.builder.get_object("sentence_count")
         sentence_count.set_text("%d/%d" % (self.sample_id, MIN_SAMPLES_REQUIRED))
+        if self.sample_id >= MIN_SAMPLES_REQUIRED:
+            self.window.set_page_complete(self.tuning_page, True)
 
     def load_sentences(self):
         sentences = []
@@ -174,8 +179,20 @@ class Trainer:
             else:
                 print("Expected:", self.test_text)
                 print("Got:", self.recognised_text)
-                self.accuracy = 100 - wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
-                print("Accuracy: %.2f%%" % self.accuracy)
+                accuracy = 100 - wer(self.test_text.replace("\n", " "), self.recognised_text.replace("\n", " ")) * 100
+                if self.pretraining:
+                    pretraining_accuracy_label = self.builder.get_object("pretraining_accuracy_label")
+                    pretraining_accuracy_label.set_text("%.2f%%" % accuracy)
+                    self.pretraining = False
+                    self.training = True
+                    status_label = self.builder.get_object("status_label")
+                    status_label.set_text("Training...")
+                if self.posttraining:
+                    posttraining_accuracy_label = self.builder.get_object("posttraining_accuracy_label")
+                    posttraining_accuracy_label.set_text("%.2f%%" % accuracy)
+                    spinner = self.builder.get_object("spinner")
+                    spinner.set_active = False
+                    self.posttraining = False
 
     def on_record_button_toggled(self, button):
         if button.get_active():
@@ -226,6 +243,10 @@ class Trainer:
                     self.downloads += 1
         if page == self.tuning_page:
             self.update_training_sentence()
+        if page == self.training_page:
+            if not self.pretraining and not self.training and not self.posttraining:
+                self.pretraining = True
+                self.test_sample(0)
 
     @property
     def sentence_text(self):
