@@ -32,6 +32,7 @@ import sys
 
 MODEL_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.pbmm"
 SCORER_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-models.scorer"
+CHECKPOINT_URL = "http://abalone-data.mikeasoft.com/deepspeech-0.7.1-checkpoint.tar.gz"
 MIN_SAMPLES_REQUIRED = 10
 
 class Trainer:
@@ -43,6 +44,7 @@ class Trainer:
         self.data_dir = BaseDirectory.save_data_path("abalone")
         self.model_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.pbmm")
         self.scorer_file = os.path.join(self.data_dir, "deepspeech-0.7.1-models.scorer")
+        self.checkpoint_file = os.path.join(self.data_dir, "deepspeech-0.7.1-checkpoint.tar.gz")
         self.training_dir = os.path.join(self.data_dir, "training-data")
         
         self.sample_id = 0
@@ -56,8 +58,10 @@ class Trainer:
 
         self.model_total_size = 0
         self.scorer_total_size = 0
+        self.checkpoint_total_size = 0
         self.current_model_downloaded = 0
         self.current_scorer_downloaded = 0
+        self.current_checkpoint_downloaded = 0
 
         self.downloads = 0
 
@@ -69,6 +73,9 @@ class Trainer:
 
         if os.path.exists(self.scorer_file + ".part"):
             os.remove(self.scorer_file + ".part")
+
+        if os.path.exists(self.checkpoint_file + ".part"):
+            os.remove(self.checkpoint_file + ".part")
 
         self.init_recording()
         self.init_playback()
@@ -91,20 +98,25 @@ class Trainer:
         self.training = False
         self.posttraining = False
 
-    def download_progress(self, current_num_bytes, total_num_bytes, download_id):
+    def update_download_progress(self, current_num_bytes, total_num_bytes, download_id):
         if download_id == "model":
             self.model_total_size = total_num_bytes
             self.current_model_downloaded = current_num_bytes
         elif download_id == "scorer":
             self.scorer_total_size = total_num_bytes
             self.current_scorer_downloaded = current_num_bytes
-        self.download_progress.set_fraction((self.current_model_downloaded + self.current_scorer_downloaded) / (self.model_total_size + self.scorer_total_size))
+        elif download_id == "checkpoint":
+            self.checkpoint_total_size = total_num_bytes
+            self.current_checkpoint_downloaded = current_num_bytes
+        self.download_progress.set_fraction((self.current_model_downloaded + self.current_scorer_downloaded + self.current_checkpoint_downloaded) / (self.model_total_size + self.scorer_total_size + self.checkpoint_total_size))
 
     def download_complete(self, source_object, res, download_id):
         if download_id == "model":
             os.rename(self.model_file + ".part", self.model_file)
         elif download_id == "scorer":
             os.rename(self.scorer_file + ".part", self.scorer_file)
+        elif download_id == "checkpoint":
+            os.rename(self.checkpoint_file + ".part", self.checkpoint_file)
         self.downloads -= 1
         if self.downloads == 0:
             self.download_progress.set_text("Download complete")
@@ -232,18 +244,22 @@ class Trainer:
 
     def on_trainer_prepare(self, assistant, page):
         if page == self.download_progress:
-            if self.downloads == 0 and os.path.exists(self.model_file) and os.path.exists(self.scorer_file):
+            if self.downloads == 0 and os.path.exists(self.model_file) and os.path.exists(self.scorer_file) and os.path.exists(self.checkpoint_file):
                 self.download_progress.set_fraction(1)
                 self.download_progress.set_text("Download complete")
                 self.window.set_page_complete(page, True)
             else:
                 if not os.path.exists(self.model_file) and not os.path.exists(self.model_file + ".part"):
                     model_downloader = Gio.File.new_for_uri(MODEL_URL)
-                    model_downloader.copy_async(Gio.File.new_for_path(self.model_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("model",), self.download_complete, ("model",))
+                    model_downloader.copy_async(Gio.File.new_for_path(self.model_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.update_download_progress, ("model",), self.download_complete, ("model",))
                     self.downloads += 1
                 if not os.path.exists(self.scorer_file) and not os.path.exists(self.scorer_file + ".part"):
                     scorer_downloader = Gio.File.new_for_uri(SCORER_URL)
-                    scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.download_progress, ("scorer",), self.download_complete, ("scorer",))
+                    scorer_downloader.copy_async(Gio.File.new_for_path(self.scorer_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.update_download_progress, ("scorer",), self.download_complete, ("scorer",))
+                    self.downloads += 1
+                if not os.path.exists(self.checkpoint_file) and not os.path.exists(self.checkpoint_file + ".part"):
+                    checkpoint_downloader = Gio.File.new_for_uri(CHECKPOINT_URL)
+                    checkpoint_downloader.copy_async(Gio.File.new_for_path(self.checkpoint_file + ".part"), Gio.FileCopyFlags.OVERWRITE, GLib.PRIORITY_DEFAULT, None, self.update_download_progress, ("checkpoint",), self.download_complete, ("checkpoint",))
                     self.downloads += 1
         if page == self.tuning_page:
             self.update_training_sentence()
