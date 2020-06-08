@@ -158,7 +158,10 @@ class Trainer:
 
     def test_sample(self, sample_to_test):
         self.testing_sample = sample_to_test
-        self.test_pipeline = Gst.parse_launch("filesrc name=wavtestfile ! decodebin ! audioconvert ! audiorate ! audioresample ! deepspeech silence-threshold=1 silence-length=20 ! fakesink")
+        self.test_pipeline = Gst.parse_launch("filesrc name=wavtestfile ! decodebin ! audioconvert ! audiorate ! audioresample ! deepspeech silence-threshold=1 silence-length=20 name=deepspeech ! fakesink")
+        deepspeech = self.test_pipeline.get_by_name("deepspeech")
+        deepspeech.set_property("speech-model", self.model_file)
+        deepspeech.set_property("scorer", self.scorer_file)
         f = open(os.path.join(self.training_dir, "%d.txt" % sample_to_test), 'r')
         self.test_text += f.read()
         f.close()

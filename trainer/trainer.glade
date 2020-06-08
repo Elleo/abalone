@@ -120,6 +120,9 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
           </packing>
         </child>
       </object>
+      <packing>
+        <property name="title" translatable="yes">Download</property>
+      </packing>
     </child>
     <child>
       <object class="GtkGrid" id="tuning_page">
