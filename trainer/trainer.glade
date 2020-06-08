@@ -86,18 +86,40 @@ When you're ready to begin press the &lt;i&gt;&lt;b&gt;Next&lt;/b&gt;&lt;/i&gt; 
       </packing>
     </child>
     <child>
-      <object class="GtkProgressBar" id="download_progress">
+      <object class="GtkGrid" id="download_page">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_bottom">120</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="text" translatable="yes">Downloading...</property>
-        <property name="show_text">True</property>
+        <property name="row_spacing">10</property>
+        <property name="column_homogeneous">True</property>
+        <child>
+          <object class="GtkProgressBar" id="download_progress">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_bottom">120</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="show_text">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Download</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+          </packing>
+        </child>
       </object>
-      <packing>
-        <property name="title" translatable="yes">Download</property>
-      </packing>
     </child>
     <child>
       <object class="GtkGrid" id="tuning_page">

@@ -83,6 +83,7 @@ class Trainer:
         self.window = self.builder.get_object("trainer")
         self.download_progress = self.builder.get_object("download_progress")
         self.training_progress = self.builder.get_object("training_progress")
+        self.download_page = self.builder.get_object("download_page")
         self.tuning_page = self.builder.get_object("tuning_page")
         self.training_page = self.builder.get_object("training_page")
         self.record_button = self.builder.get_object("record_button")
@@ -184,7 +185,7 @@ class Trainer:
 
     def on_test_message(self, bus, message):
         structure = message.get_structure()
-        if structure and structure.get_name() == "deepspeech":
+        if structure and structure.get_name() == "deepspeech" and structure.get_value("intermediate") == False:
             self.recognised_text += structure.get_value("text") + "\n"
             self.training_progress.set_fraction((self.testing_sample + 1) / self.sample_id)
             if self.testing_sample < self.sample_id - 1:
@@ -243,7 +244,7 @@ class Trainer:
         print(args)
 
     def on_trainer_prepare(self, assistant, page):
-        if page == self.download_progress:
+        if page == self.download_page:
             if self.downloads == 0 and os.path.exists(self.model_file) and os.path.exists(self.scorer_file) and os.path.exists(self.checkpoint_file):
                 self.download_progress.set_fraction(1)
                 self.download_progress.set_text("Download complete")
