@@ -67,6 +67,16 @@ class Trainer:
 
         self.have_sample = False
 
+        if os.path.exists(os.path(self.training_dir, "training.csv")):
+            self.training_csv = open(os.path(self.training_dir, "training.csv"), "a")
+        else:
+            self.training_csv = open(os.path(self.training_dir, "training.csv"), "w")
+            self.training_csv.write("wav_filename,wav_filesize,transcript")
+        if os.path.exists(os.path(self.training_dir, "testing.csv")):
+            self.testing_csv = open(os.path(self.training_dir, "testing.csv"), "a")
+        else:
+            self.testing_csv = open(os.path(self.training_dir, "testing.csv"), "w")
+
         # Clean up incomplete downloads
         if os.path.exists(self.model_file + ".part"):
             os.remove(self.model_file + ".part")
@@ -220,7 +230,16 @@ class Trainer:
             f = open(os.path.join(self.training_dir, "%d.txt" % self.sample_id), 'w')
             f.write(self.sentence_text)
             f.close()
-            self.wavrecfile.set_property("location", os.path.join(self.training_dir, "%d.wav" % self.sample_id))
+            location = os.path.join(self.training_dir, "%d.wav" % self.sample_id)
+            self.wavrecfile.set_property("location", location)
+            stripped_text = jiwer.RemovePunctuation()(self.sentence_text).lower().encode("ascii", "ignore").decode().replace("'", "")
+            wavsize = os.stat(location).st_size
+            if self.sample_id % 6 < 3:
+                # Training sample
+                self.training_csv.write("%s,%d,%s" % (location, wavsize, stripped_text))
+            else:
+                # Testing sample
+                self.testing_csv.write("%s,%d,%s" % (location, wavsize, stripped_text))
             self.record_pipeline.set_state(Gst.State.PLAYING)
             self.play_button.set_sensitive(True)
             self.have_sample = True
