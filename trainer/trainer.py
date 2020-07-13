@@ -230,16 +230,16 @@ class Trainer:
             f = open(os.path.join(self.training_dir, "%d.txt" % self.sample_id), 'w')
             f.write(self.sentence_text)
             f.close()
-            location = os.path.join(self.training_dir, "%d.wav" % self.sample_id)
-            self.wavrecfile.set_property("location", location)
+            self.wavrecfile.set_property("location", os.path.join(self.training_dir, "%d.wav" % self.sample_id))
+            training_file = os.path.join("Deepspeech", "training-data", "%d.wav" % self.sample_id)
             stripped_text = jiwer.RemovePunctuation()(self.sentence_text).lower().encode("ascii", "ignore").decode().replace("'", "")
             wavsize = os.stat(location).st_size
             if self.sample_id % 6 < 3:
                 # Training sample
-                self.training_csv.write("%s,%d,%s" % (location, wavsize, stripped_text))
+                self.training_csv.write("%s,%d,%s" % (training_file, wavsize, stripped_text))
             else:
                 # Testing sample
-                self.testing_csv.write("%s,%d,%s" % (location, wavsize, stripped_text))
+                self.testing_csv.write("%s,%d,%s" % (training_file, wavsize, stripped_text))
             self.record_pipeline.set_state(Gst.State.PLAYING)
             self.play_button.set_sensitive(True)
             self.have_sample = True
