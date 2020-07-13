@@ -1,0 +1,55 @@
+# Please refer to the TRAINING documentation, "Basic Dockerfile for training"
+
+FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+ENV DEEPSPEECH_REPO=https://github.com/mozilla/DeepSpeech.git
+ENV DEEPSPEECH_SHA=v0.7.4
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        apt-utils \
+        bash-completion \
+        build-essential \
+        curl \
+        git \
+        git-lfs \
+        libbz2-dev \
+        locales \
+        python3-venv \
+        unzip \
+        wget
+
+# We need to remove it because it's breaking deepspeech install later with
+# weird errors about setuptools
+RUN apt-get purge -y python3-xdg
+
+# Install dependencies for audio augmentation
+RUN apt-get install -y --no-install-recommends libopus0 libsndfile1
+
+WORKDIR /
+RUN git lfs install
+RUN git clone $DEEPSPEECH_REPO
+
+WORKDIR /DeepSpeech
+RUN git checkout $DEEPSPEECH_SHA
+
+RUN apt-get install -y python3-pip
+
+# Build CTC decoder first, to avoid clashes on incompatible versions upgrades
+RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
+RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
+
+# Prepare deps
+RUN pip3 install --upgrade pip==20.0.2 wheel==0.34.2 setuptools==46.1.3
+
+RUN pip3 install tensorflow-gpu
+
+# Install DeepSpeech
+#  - No need for the decoder since we did it earlier
+#  - There is already correct TensorFlow GPU installed on the base image,
+#    we don't want to break that
+RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
+
+VOLUME ["/Deepspeech/checkpoint", "/Deepspeech/training-data"]
+
+CMD python3 DeepSpeech.py --n_hidden 2048 --checkpoint_dir /Deepspeech/checkpoint --epochs 3 --train_files /Deepspeech/training-data/training.csv --dev_files /Deepspeech/training-data/testing.csv --test_files /Deepspeech/training-data/testing.csv --learning_rate 0.0001 --train_cudnn
