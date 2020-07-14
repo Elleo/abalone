@@ -35,6 +35,10 @@ RUN git checkout $DEEPSPEECH_SHA
 
 RUN apt-get install -y python3-pip
 
+# Make DeepSpeech scripts compatible with 18.04 by making python3 default
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 # Build CTC decoder first, to avoid clashes on incompatible versions upgrades
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
 RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
@@ -42,7 +46,7 @@ RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 # Prepare deps
 RUN pip3 install --upgrade pip==20.0.2 wheel==0.34.2 setuptools==46.1.3
 
-RUN pip3 install tensorflow-gpu
+RUN pip3 install tensorflow-gpu==1.15.2
 
 # Install DeepSpeech
 #  - No need for the decoder since we did it earlier
