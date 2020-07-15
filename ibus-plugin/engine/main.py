@@ -59,9 +59,9 @@ class IMApp:
         self.__bus.connect("disconnected", self.__bus_disconnected_cb)
         self.__factory = IBus.Factory.new(self.__bus.get_connection())
         self.__factory.add_engine("abalone",
-                GObject.type_from_name("EngineAbaole"))
+                GObject.type_from_name("EngineAbalone"))
         if exec_by_ibus:
-            self.__bus.request_name("org.freedesktop.IBus.Abaole", 0)
+            self.__bus.request_name("org.freedesktop.IBus.Abalone", 0)
         else:
             self.__bus.register_component(self.__component)
             self.__bus.set_global_engine_async(
